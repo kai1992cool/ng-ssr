@@ -1,28 +1,37 @@
-import { Inject, Injectable } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
+import { Inject, Injectable, Optional, PLATFORM_ID } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DocumentService {
-  constructor(@Inject(DOCUMENT) private document: Document) {}
+  isBrowser: boolean;
+
+  constructor(
+    @Optional() @Inject(DOCUMENT) private document: Document,
+    @Inject(PLATFORM_ID) platformId: Object
+    ) {
+      this.isBrowser = isPlatformBrowser(platformId);
+    }
 
   get myCookie() {
     let cookies;
-
-    try {
-      cookies = this.document.cookie;
-    } catch (e) {
-      // catch error if document is not defined
-      console.error('Cookie error', e);
-      return null;
+    if(this.isBrowser) {
+      try {
+        cookies = this.document.cookie;
+      } catch (e) {
+        // catch error if document is not defined
+        console.error('Cookie error', e);
+        return null;
+      }
+  
+      const cookie = cookies
+        .split('; ')
+        .map((c) => c.split('='))
+        .find(([name]) => name === 'my-cookie');
+  
+      return cookie?.[1] ?? null;
     }
-
-    const cookie = cookies
-      .split('; ')
-      .map((c) => c.split('='))
-      .find(([name]) => name === 'my-cookie');
-
-    return cookie?.[1] ?? null;
+    return undefined;
   }
 }
